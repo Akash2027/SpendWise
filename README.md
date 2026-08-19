@@ -134,11 +134,7 @@ The base currency is fixed to **USD**, and rates are fetched for all supported c
 
 ## 🖼️ Screenshots
 
-*(Screenshots of the application– e.g., Home, Add Expense, Categories, Settings)*
-<img width="337" height="561" alt="image" src="https://github.com/user-attachments/assets/5029506b-008d-4757-8b08-dc5e675ff1ac" />
-<img width="345" height="648" alt="image" src="https://github.com/user-attachments/assets/fce723db-f7f0-4564-a785-bf14ec212731" />
-<img width="320" height="559" alt="image" src="https://github.com/user-attachments/assets/19884aaf-e31a-4924-aba7-ffe406c0ee98" />
-
+<div align="center"> <img src="https://github.com/user-attachments/assets/5029506b-008d-4757-8b08-dc5e675ff1ac" width="250" alt="Home Screen" /> <img src="https://github.com/user-attachments/assets/fce723db-f7f0-4564-a785-bf14ec212731" width="250" alt="Add Expense" /> <img src="https://github.com/user-attachments/assets/19884aaf-e31a-4924-aba7-ffe406c0ee98" width="250" alt="Settings" /> </div><p align="center"> <em>Left to right: Home Dashboard · Add Expense · Settings</em> </p>
 
 ---
 
