@@ -1,6 +1,4 @@
-Here's a complete, professional `README.md` file for your SpendWise project – ready to add to your repository or submit with your assignment.
 
----
 
 # 💰 SpendWise – Expense Tracker
 
