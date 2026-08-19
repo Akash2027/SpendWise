@@ -14,6 +14,10 @@ struct ExpenseListView: View {
     @State private var showingAddSheet = false
     @State private var viewMode: ViewMode = .list
     @State private var currentCategoryIndex = 0
+    
+    // MARK: - Delete Confirmation State
+    @State private var expenseToDelete: Expense?   // The expense being considered for deletion
+    @State private var showingDeleteConfirmation = false
 
     enum ViewMode {
         case list, categories
@@ -27,10 +31,8 @@ struct ExpenseListView: View {
 
                 ScrollView {
                     VStack(spacing: 16) {
-                        // Total Card
                         totalCard
 
-                        // Loading indicator
                         if viewModel.isLoadingRates {
                             HStack {
                                 ProgressView()
@@ -42,7 +44,6 @@ struct ExpenseListView: View {
                             .padding(.horizontal, 16)
                         }
 
-                        // Segmented Control
                         Picker("View Mode", selection: $viewMode) {
                             Text("📋 List").tag(ViewMode.list)
                             Text("📊 Categories").tag(ViewMode.categories)
@@ -50,7 +51,6 @@ struct ExpenseListView: View {
                         .pickerStyle(.segmented)
                         .padding(.horizontal, 16)
 
-                        // Content based on mode
                         if viewMode == .list {
                             expenseList
                         } else {
@@ -88,14 +88,28 @@ struct ExpenseListView: View {
             } message: {
                 Text(viewModel.errorMessage ?? "Unknown error")
             }
+            // MARK: - Delete Confirmation Alert
+            .alert("Delete Expense?", isPresented: $showingDeleteConfirmation, presenting: expenseToDelete) { expense in
+                Button("Cancel", role: .cancel) {
+                    expenseToDelete = nil
+                }
+                Button("Delete", role: .destructive) {
+                    withAnimation {
+                        viewModel.deleteExpense(expense)
+                        expenseToDelete = nil
+                    }
+                }
+            } message: { expense in
+                Text("Are you sure you want to delete \"\(expense.title)\"? This action cannot be undone.")
+            }
             .onAppear {
                 viewModel.configure(with: modelContext)
                 viewModel.fetchExchangeRates()
                 
+                // Print SwiftData store path
                 let appSupport = FileManager.default.urls(for: .applicationSupportDirectory, in: .userDomainMask).first!
-                    let storeURL = appSupport.appendingPathComponent("default.store")
-                    print("📁 SwiftData store path: \(storeURL.path)")
-                
+                let storeURL = appSupport.appendingPathComponent("default.store")
+                print("📁 SwiftData store path: \(storeURL.path)")
             }
         }
     }
@@ -140,7 +154,6 @@ struct ExpenseListView: View {
     }
 
     // MARK: - Expense List
-  
     private var expenseList: some View {
         LazyVStack(spacing: 8) {
             if viewModel.expenses.isEmpty {
@@ -148,22 +161,22 @@ struct ExpenseListView: View {
             } else {
                 ForEach(viewModel.expenses, id: \.self) { expense in
                     expenseRow(expense)
-                        // ✅ Swipe to delete (iOS 15+)
+                        // ✅ Swipe to delete → shows confirmation alert
                         .swipeActions(edge: .trailing, allowsFullSwipe: true) {
                             Button(role: .destructive) {
-                                withAnimation {
-                                    viewModel.deleteExpense(expense)
-                                }
+                                // Show confirmation alert
+                                expenseToDelete = expense
+                                showingDeleteConfirmation = true
                             } label: {
                                 Label("Delete", systemImage: "trash")
                             }
                         }
-                        // ✅ Long press context menu (backup)
+                        // ✅ Context menu (long press) → shows confirmation alert
                         .contextMenu {
                             Button(role: .destructive) {
-                                withAnimation {
-                                    viewModel.deleteExpense(expense)
-                                }
+                                // Show confirmation alert
+                                expenseToDelete = expense
+                                showingDeleteConfirmation = true
                             } label: {
                                 Label("Delete", systemImage: "trash")
                             }
@@ -200,7 +213,7 @@ struct ExpenseListView: View {
                 Text(expense.title)
                     .font(.body)
                     .fontWeight(.semibold)
-                Text("\(expense.category) · \(expense.date, format: .dateTime.day().month().year())")
+                Text("\(expense.category) · \(expense.date, style: .date)")
                     .font(.caption)
                     .foregroundStyle(.secondary)
             }
@@ -218,7 +231,7 @@ struct ExpenseListView: View {
         )
     }
 
-    // MARK: - Category Paged View (FIXED - Shows all categories with dots)
+    // MARK: - Category Paged View
     private var categoryPagedView: some View {
         let categories = viewModel.categoryTotals
         return Group {
@@ -238,7 +251,6 @@ struct ExpenseListView: View {
                 .padding(.vertical, 60)
             } else {
                 VStack(spacing: 8) {
-                    // Category Name & Count
                     HStack {
                         Text("\(categories.count) categories")
                             .font(.caption)
@@ -250,7 +262,6 @@ struct ExpenseListView: View {
                     }
                     .padding(.horizontal, 16)
 
-                    // TabView with all categories
                     TabView(selection: $currentCategoryIndex) {
                         ForEach(categories.indices, id: \.self) { index in
                             CategoryCard(
@@ -263,11 +274,10 @@ struct ExpenseListView: View {
                             .tag(index)
                         }
                     }
-                    .tabViewStyle(.page(indexDisplayMode: .always))  // Shows dots at bottom
+                    .tabViewStyle(.page(indexDisplayMode: .always))
                     .frame(height: 200)
                     .padding(.horizontal, 8)
                     
-                    // Category counter
                     Text("\(currentCategoryIndex + 1) of \(categories.count)")
                         .font(.caption)
                         .foregroundStyle(.secondary)
